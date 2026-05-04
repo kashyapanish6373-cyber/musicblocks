@@ -21,11 +21,13 @@ import { BLOCK_TEMPLATES, BLOCK_TYPES } from './constants';
 import BlockPalette from './components/BlockPalette';
 import Workspace from './components/Workspace';
 import { DroppedBlock } from './components/Block';
+import { playSequence, stopPlayback } from './lib/AudioEngine';
 
 export default function App() {
   const [blocks, setBlocks] = useState([]);
   const [activeId, setActiveId] = useState(null);
   const [activeItem, setActiveItem] = useState(null);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -33,6 +35,7 @@ export default function App() {
   );
 
   const handleDragStart = (event) => {
+    if (isPlaying) return;
     const { active } = event;
     setActiveId(active.id);
     
@@ -51,6 +54,7 @@ export default function App() {
   };
 
   const handleDragEnd = (event) => {
+    if (isPlaying) return;
     const { active, over } = event;
     setActiveId(null);
     setActiveItem(null);
@@ -105,6 +109,7 @@ export default function App() {
   };
 
   const removeBlock = (id) => {
+    if (isPlaying) return;
     setBlocks(blocks => {
        const removeRecursive = (list) => {
           return list.filter(b => b.id !== id).map(b => {
@@ -141,6 +146,21 @@ export default function App() {
     })
   };
 
+  const handlePlay = () => {
+    setIsPlaying(true);
+    playSequence(blocks, () => {
+      setIsPlaying(false);
+    }).catch(e => {
+      console.error(e);
+      setIsPlaying(false);
+    });
+  };
+
+  const handleStop = () => {
+    stopPlayback();
+    setIsPlaying(false);
+  };
+
   return (
     <DndContext 
       sensors={sensors} 
@@ -150,8 +170,17 @@ export default function App() {
       onDragEnd={handleDragEnd}
     >
       <div className="app-container">
-        <BlockPalette />
-        <Workspace blocks={blocks} onRemove={removeBlock} onUpdate={updateBlockData} />
+        <div style={{ opacity: isPlaying ? 0.5 : 1, pointerEvents: isPlaying ? 'none' : 'auto', transition: 'opacity 0.3s' }}>
+          <BlockPalette />
+        </div>
+        <Workspace 
+          blocks={blocks} 
+          onRemove={removeBlock} 
+          onUpdate={updateBlockData} 
+          isPlaying={isPlaying}
+          onPlay={handlePlay}
+          onStop={handleStop}
+        />
       </div>
 
       <DragOverlay dropAnimation={dropAnimation}>
