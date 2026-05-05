@@ -1,5 +1,4 @@
-import React, { useState } from 'react';
-import {
+import React, { useState, useMemo } from 'react';
   DndContext,
   DragOverlay,
   closestCorners,
@@ -22,6 +21,7 @@ import BlockPalette from './components/BlockPalette';
 import Workspace from './components/Workspace';
 import { DroppedBlock } from './components/Block';
 import { playSequence, stopPlayback } from './lib/AudioEngine';
+import { validateBlocks } from './lib/Validation';
 
 export default function App() {
   const [blocks, setBlocks] = useState([]);
@@ -161,6 +161,8 @@ export default function App() {
     setIsPlaying(false);
   };
 
+  const validation = useMemo(() => validateBlocks(blocks), [blocks]);
+
   return (
     <DndContext 
       sensors={sensors} 
@@ -180,6 +182,7 @@ export default function App() {
           isPlaying={isPlaying}
           onPlay={handlePlay}
           onStop={handleStop}
+          validation={validation}
         />
       </div>
 

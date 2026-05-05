@@ -12,7 +12,7 @@ const ICONS = {
   [BLOCK_TYPES.TEMPO]: <Activity size={18} />
 };
 
-export function DroppedBlock({ block, onRemove, onUpdate }) {
+export function DroppedBlock({ block, onRemove, onUpdate, errors }) {
   const {
     attributes,
     listeners,
@@ -36,10 +36,15 @@ export function DroppedBlock({ block, onRemove, onUpdate }) {
     <div
       ref={setNodeRef}
       style={style}
-      className={`dropped-block block-${block.type} sortable-item`}
+      className={`dropped-block block-${block.type} sortable-item ${errors?.[block.id] ? 'block-error' : ''}`}
       {...attributes}
       {...listeners}
     >
+      {errors?.[block.id] && (
+        <div className="error-tooltip">
+          {errors[block.id]}
+        </div>
+      )}
       <div className="flex-center">
         {ICONS[block.type]}
         <span style={{ fontWeight: 600, textTransform: 'uppercase', fontSize: '0.9rem' }}>
@@ -105,7 +110,7 @@ export function DroppedBlock({ block, onRemove, onUpdate }) {
       </div>
 
       {block.type === BLOCK_TYPES.REPEAT && (
-        <NestedDropZone parentId={block.id} childrenBlocks={block.data.children} onRemove={onRemove} onUpdate={onUpdate} />
+        <NestedDropZone parentId={block.id} childrenBlocks={block.data.children} onRemove={onRemove} onUpdate={onUpdate} errors={errors} />
       )}
 
       <button 
@@ -120,7 +125,7 @@ export function DroppedBlock({ block, onRemove, onUpdate }) {
   );
 }
 
-function NestedDropZone({ parentId, childrenBlocks, onRemove, onUpdate }) {
+function NestedDropZone({ parentId, childrenBlocks, onRemove, onUpdate, errors }) {
   const { setNodeRef, isOver } = useDroppable({
     id: `nested-${parentId}`
   });
@@ -137,7 +142,7 @@ function NestedDropZone({ parentId, childrenBlocks, onRemove, onUpdate }) {
         </div>
       ) : (
         childrenBlocks.map(child => (
-          <DroppedBlock key={child.id} block={child} onRemove={onRemove} onUpdate={onUpdate} />
+          <DroppedBlock key={child.id} block={child} onRemove={onRemove} onUpdate={onUpdate} errors={errors} />
         ))
       )}
     </div>

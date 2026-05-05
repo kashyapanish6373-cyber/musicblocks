@@ -1,10 +1,10 @@
 import React from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { Play, Square } from 'lucide-react';
+import { Play, Square, AlertCircle } from 'lucide-react';
 import { DroppedBlock } from './Block';
 
-export default function Workspace({ blocks, onRemove, onUpdate, isPlaying, onPlay, onStop }) {
+export default function Workspace({ blocks, onRemove, onUpdate, isPlaying, onPlay, onStop, validation }) {
   const { setNodeRef, isOver } = useDroppable({
     id: 'workspace-canvas',
     disabled: isPlaying
@@ -16,21 +16,28 @@ export default function Workspace({ blocks, onRemove, onUpdate, isPlaying, onPla
         <h1 style={{ margin: 0 }}>Composition</h1>
         <div style={{ display: 'flex', gap: '10px' }}>
            {!isPlaying ? (
-             <button 
-               className="play-btn" 
-               onClick={onPlay} 
-               disabled={blocks.length === 0}
-               style={{
-                 display: 'flex', alignItems: 'center', gap: '8px',
-                 backgroundColor: blocks.length === 0 ? '#333' : '#69f0ae',
-                 color: blocks.length === 0 ? '#666' : '#000',
-                 border: 'none', padding: '10px 20px', borderRadius: '8px',
-                 fontSize: '1rem', fontWeight: 'bold', cursor: blocks.length === 0 ? 'not-allowed' : 'pointer',
-                 transition: 'all 0.2s'
-               }}
-             >
-               <Play size={20} fill={blocks.length === 0 ? "none" : "currentColor"} /> Play
-             </button>
+             <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+               {!validation.isValid && blocks.length > 0 && (
+                 <div className="validation-warning" style={{ color: '#ff5252', display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.9rem' }}>
+                   <AlertCircle size={16} /> Invalid Sequence
+                 </div>
+               )}
+               <button 
+                 className="play-btn" 
+                 onClick={onPlay} 
+                 disabled={blocks.length === 0 || !validation.isValid}
+                 style={{
+                   display: 'flex', alignItems: 'center', gap: '8px',
+                   backgroundColor: (blocks.length === 0 || !validation.isValid) ? '#333' : '#69f0ae',
+                   color: (blocks.length === 0 || !validation.isValid) ? '#666' : '#000',
+                   border: 'none', padding: '10px 20px', borderRadius: '8px',
+                   fontSize: '1rem', fontWeight: 'bold', cursor: (blocks.length === 0 || !validation.isValid) ? 'not-allowed' : 'pointer',
+                   transition: 'all 0.2s'
+                 }}
+               >
+                 <Play size={20} fill={blocks.length === 0 ? "none" : "currentColor"} /> Play
+               </button>
+             </div>
            ) : (
              <button 
                className="stop-btn" 
@@ -73,6 +80,7 @@ export default function Workspace({ blocks, onRemove, onUpdate, isPlaying, onPla
                 block={block} 
                 onRemove={onRemove}
                 onUpdate={onUpdate}
+                errors={validation.errors}
               />
             ))
           )}
